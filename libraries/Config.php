@@ -716,41 +716,16 @@ class Config
      */
     public function checkHTTP($link, $get_body = false)
     {
-        if (! function_exists('curl_init')) {
-            return null;
-        }
-        $handle = curl_init($link);
-        if ($handle === false) {
-            return null;
-        }
-        Util::configureCurl($handle);
-        curl_setopt($handle, CURLOPT_FOLLOWLOCATION, 0);
-        curl_setopt($handle, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($handle, CURLOPT_SSL_VERIFYHOST, '2');
-        curl_setopt($handle, CURLOPT_SSL_VERIFYPEER, '1');
-        curl_setopt($handle, CURLOPT_CONNECTTIMEOUT, 5);
-        curl_setopt($handle, CURLOPT_TIMEOUT, 5);
-        curl_setopt($handle, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+
         if (! defined('TESTSUITE')) {
             session_write_close();
         }
-        $data = @curl_exec($handle);
+        $response = Util::httpRequest($link,"GET", 5,!$get_body,null,"",true);
         if (! defined('TESTSUITE')) {
             session_start();
         }
-        if ($data === false) {
-            return null;
-        }
-        $http_status = curl_getinfo($handle, CURLINFO_HTTP_CODE);
 
-        if ($http_status == 200) {
-            return $get_body ? $data : true;
-        }
-
-        if ($http_status == 404) {
-            return false;
-        }
-        return null;
+        return $response;
     }
 
     /**
