@@ -2687,7 +2687,7 @@ class Util
             $dir .= '/';
         }
 
-        return str_replace('%u', $GLOBALS['cfg']['Server']['user'], $dir);
+        return str_replace('%u', PMA_securePath($GLOBALS['cfg']['Server']['user']), $dir);
     }
 
     /**
@@ -4907,30 +4907,12 @@ class Util
      *
      * @return mixed
      */
-    public static function httpRequest($url, $method, $connection_timeout, $return_only_status = false, $content = null, $header = "", $use_curl = false)
+    public static function httpRequest($url, $method, $connection_timeout, $return_only_status = false, $content = null, $header = "")
     {
-        if (ini_get('allow_url_fopen') && !$use_curl) {
-            $context = array(
-                'http' => array(
-                    'method'  => $method,
-                    'content' => $content,
-                    'header' => $header,
-                    'request_fulluri' => true,
-                    'timeout' => $connection_timeout
-                )
-            );
-            $context = Util::handleContext($context);
-            $response = file_get_contents(
-                $url,
-                false,
-                stream_context_create($context)
-            );
-            if($return_only_status)
-            {
-                preg_match( "#HTTP/[0-9\.]+\s+([0-9]+)#",$http_response_header[0], $out );
-                return ((intval($out[1]) == 200) ? true : ((intval($out[1]) == 404) ? false : null));
-            }
-        } else if (function_exists('curl_init')) {
+        if (! defined('TESTSUITE')) {
+            session_write_close();
+        }
+        if (function_exists('curl_init')) {
             $curl_handle = curl_init($url);
             if ($curl_handle === false) {
                 return null;
@@ -4974,8 +4956,33 @@ class Util
                 return null;
             }
         }
+        else if (ini_get('allow_url_fopen')) {
+            $context = array(
+                'http' => array(
+                    'method'  => $method,
+                    'content' => $content,
+                    'header' => $header,
+                    'request_fulluri' => true,
+                    'timeout' => $connection_timeout
+                )
+            );
+            $context = Util::handleContext($context);
+            $response = @file_get_contents(
+                $url,
+                false,
+                stream_context_create($context)
+            );
+            if($return_only_status)
+            {
+                preg_match( "#HTTP/[0-9\.]+\s+([0-9]+)#",$http_response_header[0], $out );
+                return ((intval($out[1]) == 200) ? true : ((intval($out[1]) == 404) ? false : null));
+            }
+        }
         else
             $response = null;
+        if (! isset($_SESSION) && ! defined('TESTSUITE')) {
+            session_start();
+        }
         return $response;
     }
 }

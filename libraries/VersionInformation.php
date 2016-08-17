@@ -42,9 +42,7 @@ class VersionInformation
             $response = $_SESSION['cache']['version_check']['response'];
         } else {
             $save = true;
-            if (! defined('TESTSUITE')) {
-                session_write_close();
-            }
+
             $file = 'https://www.phpmyadmin.net/home_page/version.json';
             $response = Util::httpRequest($file,"GET",3);
         }
@@ -62,9 +60,6 @@ class VersionInformation
         }
 
         if ($save) {
-            if (! isset($_SESSION) && ! defined('TESTSUITE')) {
-                session_start();
-            }
             $_SESSION['cache']['version_check'] = array(
                 'response' => $response,
                 'timestamp' => time()

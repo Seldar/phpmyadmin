@@ -612,7 +612,7 @@ class Config
         } else {
             $link = 'https://api.github.com/repos/phpmyadmin/phpmyadmin/git/commits/'
                 . $hash;
-            $is_found = $this->checkHTTP($link, ! $commit);
+            $is_found = Util::httpRequest($link,"GET", 5,$commit,null,"");
             switch($is_found) {
             case false:
                 $is_remote_commit = false;
@@ -641,7 +641,7 @@ class Config
             } else {
                 $link = 'https://api.github.com/repos/phpmyadmin/phpmyadmin'
                     . '/git/trees/' . $branch;
-                $is_found = $this->checkHTTP($link);
+                $is_found = Util::httpRequest($link,"GET", 5);
                 switch($is_found) {
                 case true:
                     $is_remote_branch = true;
@@ -720,7 +720,7 @@ class Config
         if (! defined('TESTSUITE')) {
             session_write_close();
         }
-        $response = Util::httpRequest($link,"GET", 5,!$get_body,null,"",true);
+        $response = Util::httpRequest($link,"GET", 5,!$get_body,null,"");
         if (! defined('TESTSUITE')) {
             session_start();
         }
